@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Cronofy;
 
@@ -7,127 +9,165 @@ use Cronofy\Http\CurlRequest;
 
 class Cronofy
 {
-    const USERAGENT = 'Cronofy PHP 1.0.0';
-    const API_VERSION = 'v1';
+    public const USERAGENT = 'Cronofy PHP 1.0.0';
+    public const API_VERSION = 'v1';
 
+    /**
+     * @var string
+     */
     public $apiRootUrl;
+
+    /**
+     * @var string
+     */
     public $appRootUrl;
+
+    /**
+     * @var string
+     */
     public $hostDomain;
 
+    /**
+     * @var string
+     */
     public $clientId;
+
+    /**
+     * @var string
+     */
     public $clientSecret;
+
+    /**
+     * @var string
+     */
     public $accessToken;
+
+    /**
+     * @var string
+     */
     public $refreshToken;
+
+    /**
+     * @var string
+     */
     public $expiresIn;
+
+    /**
+     * @var string
+     */
     public $tokens;
+
+    /**
+     * @var CurlRequest
+     */
     public $httpClient;
 
-    public function __construct($config = [])
+    public function __construct(array $config = [])
     {
-        if (!function_exists('curl_init')) {
-            throw new CronofyException("missing cURL extension", 1);
+        if (!\function_exists('curl_init')) {
+            throw new CronofyException('missing cURL extension', 1);
         }
 
-        if (!empty($config["client_id"])) {
-            $this->clientId = $config["client_id"];
+        if (!empty($config['client_id'])) {
+            $this->clientId = $config['client_id'];
         }
-        if (!empty($config["client_secret"])) {
-            $this->clientSecret = $config["client_secret"];
+        if (!empty($config['client_secret'])) {
+            $this->clientSecret = $config['client_secret'];
         }
-        if (!empty($config["access_token"])) {
-            $this->accessToken = $config["access_token"];
+        if (!empty($config['access_token'])) {
+            $this->accessToken = $config['access_token'];
         }
-        if (!empty($config["refresh_token"])) {
-            $this->refreshToken = $config["refresh_token"];
+        if (!empty($config['refresh_token'])) {
+            $this->refreshToken = $config['refresh_token'];
         }
-        if (!empty($config["expires_in"])) {
-            $this->expiresIn = $config["expires_in"];
+        if (!empty($config['expires_in'])) {
+            $this->expiresIn = $config['expires_in'];
         }
 
-        if (!empty($config["http_client"])) {
-            $this->httpClient = $config["http_client"];
+        if (!empty($config['http_client'])) {
+            $this->httpClient = $config['http_client'];
         } else {
             $this->httpClient = new CurlRequest(self::USERAGENT);
         }
 
-        $this->setUrls(isset($config["data_center"]) ? $config["data_center"] : false);
+        $this->setUrls($config['data_center'] ?? false);
     }
 
-    private function setUrls($data_center = false)
+    private function setUrls(bool $data_center = false): void
     {
-        $data_center_addin = $data_center ? '-' . $data_center : '';
+        $data_center_addin = $data_center ? '-'.$data_center : '';
 
         $this->apiRootUrl = "https://api$data_center_addin.cronofy.com";
         $this->appRootUrl = "https://app$data_center_addin.cronofy.com";
         $this->hostDomain = "api$data_center_addin.cronofy.com";
     }
 
-    private function baseHttpGet($path, array $auth_headers, array $params)
+    private function baseHttpGet(string $path, array $auth_headers, array $params)
     {
         $url = $this->apiUrl($path);
         $url .= $this->urlParams($params);
 
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+        if (false === \filter_var($url, FILTER_VALIDATE_URL)) {
             throw new CronofyException('invalid URL');
         }
 
-        list ($result, $status_code) = $this->httpClient->httpGet($url, $auth_headers);
+        list($result, $status_code) = $this->httpClient->httpGet($url, $auth_headers);
 
         return $this->handleResponse($result, $status_code);
     }
 
-    private function apiKeyHttpGet($path, array $params = [])
+    private function apiKeyHttpGet(string $path, array $params = [])
     {
         return $this->baseHttpGet($path, $this->getApiKeyAuthHeaders(), $params);
     }
 
-    private function httpGet($path, array $params = [])
+    private function httpGet(string $path, array $params = [])
     {
         return $this->baseHttpGet($path, $this->getAuthHeaders(), $params);
     }
 
-    private function baseHttpPost($path, $auth_headers, array $params = [])
+    private function baseHttpPost(string $path, array $auth_headers, array $params = [])
     {
         $url = $this->apiUrl($path);
 
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+        if (false === \filter_var($url, FILTER_VALIDATE_URL)) {
             throw new CronofyException('invalid URL');
         }
 
-        list ($result, $status_code) = $this->httpClient->httpPost($url, $params, $auth_headers);
+        list($result, $status_code) = $this->httpClient->httpPost($url, $params, $auth_headers);
 
         return $this->handleResponse($result, $status_code);
     }
 
-    private function httpPost($path, array $params = [])
+    private function httpPost(string $path, array $params = [])
     {
         return $this->baseHttpPost($path, $this->getAuthHeaders(true), $params);
     }
 
-    private function apiKeyHttpPost($path, array $params = [])
+    private function apiKeyHttpPost(string $path, array $params = [])
     {
         return $this->baseHttpPost($path, $this->getApiKeyAuthHeaders(true), $params);
     }
 
-    private function baseHttpDelete($path, $auth_headers, array $params = [])
+    private function baseHttpDelete(string $path, $auth_headers, array $params = []): string
     {
         $url = $this->apiUrl($path);
 
-        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+        if (false === \filter_var($url, FILTER_VALIDATE_URL)) {
             throw new CronofyException('invalid URL');
         }
 
-        list ($result, $status_code) = $this->httpClient->httpDelete($url, $params, $auth_headers);
+        list($result, $status_code) = $this->httpClient->httpDelete($url, $params, $auth_headers);
 
         return $this->handleResponse($result, $status_code);
     }
 
-    private function httpDelete($path, array $params = [])
+    private function httpDelete(string $path, array $params = []): string
     {
         return $this->baseHttpDelete($path, $this->getAuthHeaders(true), $params);
     }
 
-    public function getAuthorizationURL($params)
+    public function getAuthorizationURL(array $params): string
     {
         /*
           Array $params : An array of additional paramaters
@@ -142,28 +182,28 @@ class Cronofy
           String $url : The URL to authorize your access to the Cronofy API
          */
 
-        $scope_list = rawurlencode(join(" ", $params['scope']));
+        $scope_list = \rawurlencode(\join(' ', $params['scope']));
 
-        $url = $this->appRootUrl . "/oauth/authorize?response_type=code&client_id="
-            . $this->clientId . "&redirect_uri=" . urlencode($params['redirect_uri']) . "&scope=" . $scope_list;
+        $url = $this->appRootUrl.'/oauth/authorize?response_type=code&client_id='
+            .$this->clientId.'&redirect_uri='.\urlencode($params['redirect_uri']).'&scope='.$scope_list;
 
         if (!empty($params['state'])) {
-            $url .= "&state=" . $params['state'];
+            $url .= '&state='.$params['state'];
         }
         if (!empty($params['avoid_linking'])) {
-            $url .= "&avoid_linking=" . $params['avoid_linking'];
+            $url .= '&avoid_linking='.$params['avoid_linking'];
         }
         if (!empty($params['link_token'])) {
-            $url .= "&link_token=" . $params['link_token'];
+            $url .= '&link_token='.$params['link_token'];
         }
         if (!empty($params['delegated_scope'])) {
-            $url .= "&delegated_scope=" . rawurlencode(join(" ", $params['delegated_scope']));
+            $url .= '&delegated_scope='.\rawurlencode(\join(' ', $params['delegated_scope']));
         }
 
         return $url;
     }
 
-    public function getEnterpriseConnectAuthorizationUrl($params)
+    public function getEnterpriseConnectAuthorizationUrl(array $params): string
     {
         /*
           Array $params : An array of additional parameters
@@ -176,20 +216,21 @@ class Cronofy
           $url : String. The URL to authorize your enterprise connect access to the Cronofy API
          */
 
-        $scope_list = rawurlencode(join(" ", $params['scope']));
-        $delegated_scope_list = rawurlencode(join(" ", $params['delegated_scope']));
+        $scope_list = \rawurlencode(\join(' ', $params['scope']));
+        $delegated_scope_list = \rawurlencode(\join(' ', $params['delegated_scope']));
 
-        $url = $this->appRootUrl . "/enterprise_connect/oauth/authorize?response_type=code&client_id="
-            . $this->clientId . "&redirect_uri=" . urlencode($params['redirect_uri']) . "&scope="
-            . $scope_list . "&delegated_scope=" . $delegated_scope_list;
+        $url = $this->appRootUrl.'/enterprise_connect/oauth/authorize?response_type=code&client_id='
+            .$this->clientId.'&redirect_uri='.\urlencode($params['redirect_uri']).'&scope='
+            .$scope_list.'&delegated_scope='.$delegated_scope_list;
 
         if (!empty($params['state'])) {
-            $url .= "&state=" . rawurlencode($params['state']);
+            $url .= '&state='.\rawurlencode($params['state']);
         }
+
         return $url;
     }
 
-    public function requestToken($params)
+    public function requestToken(array $params)
     {
         /*
           Array $params : An array of additional paramaters
@@ -204,23 +245,24 @@ class Cronofy
             'client_secret' => $this->clientSecret,
             'grant_type' => 'authorization_code',
             'code' => $params['code'],
-            'redirect_uri' => $params['redirect_uri']
+            'redirect_uri' => $params['redirect_uri'],
         ];
 
-        $tokens = $this->httpPost("/oauth/token", $postfields);
+        $tokens = $this->httpPost('/oauth/token', $postfields);
 
-        if (!empty($tokens["access_token"])) {
-            $this->accessToken = $tokens["access_token"];
-            $this->refreshToken = $tokens["refresh_token"];
-            $this->expiresIn = $tokens["expires_in"];
+        if (!empty($tokens['access_token'])) {
+            $this->accessToken = $tokens['access_token'];
+            $this->refreshToken = $tokens['refresh_token'];
+            $this->expiresIn = $tokens['expires_in'];
             $this->tokens = $tokens;
+
             return true;
-        } else {
-            return $tokens["error"];
         }
+
+        return $tokens['error'];
     }
 
-    public function requestDelegatedAuthorization($params)
+    public function requestDelegatedAuthorization(array $params): string
     {
         /*
           Array $params : An array of additional parameters
@@ -230,19 +272,19 @@ class Cronofy
           scope : array. The scope of the privileges you want the eventual access_token to grant.
           state : String. A value that will be returned to you unaltered along with the delegated authorization request decision.
          */
-        if (isset($params["scope"]) && gettype($params["scope"]) == "array") {
-            $params["scope"] = join(" ", $params["scope"]);
+        if (isset($params['scope']) && 'array' == \gettype($params['scope'])) {
+            $params['scope'] = \join(' ', $params['scope']);
         }
 
-        return $this->httpPost('/' . self::API_VERSION . '/delegated_authorizations', $params);
+        return $this->httpPost('/'.self::API_VERSION.'/delegated_authorizations', $params);
     }
 
-    public function requestLinkToken()
+    public function requestLinkToken(): string
     {
         /*
           returns $result - The link_token to explicitly link to a pre-existing account. Details are available in the Cronofy API Documentation
          */
-        return $this->httpPost('/' . self::API_VERSION . '/link_tokens');
+        return $this->httpPost('/'.self::API_VERSION.'/link_tokens');
     }
 
     public function refreshToken()
@@ -257,23 +299,24 @@ class Cronofy
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
             'grant_type' => 'refresh_token',
-            'refresh_token' => $this->refreshToken
+            'refresh_token' => $this->refreshToken,
         ];
 
-        $tokens = $this->httpPost("/oauth/token", $postfields);
+        $tokens = $this->httpPost('/oauth/token', $postfields);
 
-        if (!empty($tokens["access_token"])) {
-            $this->accessToken = $tokens["access_token"];
-            $this->refreshToken = $tokens["refresh_token"];
-            $this->expiresIn = $tokens["expires_in"];
+        if (!empty($tokens['access_token'])) {
+            $this->accessToken = $tokens['access_token'];
+            $this->refreshToken = $tokens['refresh_token'];
+            $this->expiresIn = $tokens['expires_in'];
             $this->tokens = $tokens;
+
             return true;
-        } else {
-            return $tokens["error"];
         }
+
+        return $tokens['error'];
     }
 
-    public function revokeAuthorization($token)
+    public function revokeAuthorization(string $token): string
     {
         /*
           String token : Either the refresh_token or access_token for the authorization you wish to revoke. REQUIRED
@@ -284,21 +327,21 @@ class Cronofy
         $postfields = [
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
-            'token' => $token
+            'token' => $token,
         ];
 
-        return $this->httpPost("/oauth/token/revoke", $postfields);
+        return $this->httpPost('/oauth/token/revoke', $postfields);
     }
 
-    public function revokeProfile($profile_id)
+    public function revokeProfile(string $profile_id): string
     {
         /*
           String profile_id : The profile_id of the profile you wish to revoke access to. REQUIRED
          */
-        return $this->httpPost("/" . self::API_VERSION . "/profiles/" . $profile_id . "/revoke");
+        return $this->httpPost('/'.self::API_VERSION.'/profiles/'.$profile_id.'/revoke');
     }
 
-    public function applicationCalendar($application_calendar_id)
+    public function applicationCalendar(string $application_calendar_id)
     {
         /*
           application_calendar_id : String The identifier for the application calendar to create
@@ -312,58 +355,58 @@ class Cronofy
             'application_calendar_id' => $application_calendar_id,
         ];
 
-        $application_calendar = $this->httpPost("/v1/application_calendars", $postfields);
+        $application_calendar = $this->httpPost('/v1/application_calendars', $postfields);
 
-        if (!empty($application_calendar["access_token"])) {
-            $this->accessToken = $application_calendar["access_token"];
-            $this->refreshToken = $application_calendar["refresh_token"];
-            $this->expiresIn = $application_calendar["expires_in"];
+        if (!empty($application_calendar['access_token'])) {
+            $this->accessToken = $application_calendar['access_token'];
+            $this->refreshToken = $application_calendar['refresh_token'];
+            $this->expiresIn = $application_calendar['expires_in'];
             $this->tokens = $application_calendar;
+
             return $application_calendar;
-        } else {
-            return $application_calendar["error"];
         }
+
+        return $application_calendar['error'];
     }
 
-    public function getAccount()
+    public function getAccount(): string
     {
         /*
           returns $result - info for the user logged in. Details are available in the Cronofy API Documentation
          */
-        return $this->httpGet("/" . self::API_VERSION . "/account");
+        return $this->httpGet('/'.self::API_VERSION.'/account');
     }
 
-
-    public function getUserInfo()
+    public function getUserInfo(): string
     {
         /*
           returns $result - userinfo for the user logged in. Details are available in the Cronofy API Documentation
          */
-        return $this->httpGet("/" . self::API_VERSION . "/userinfo");
+        return $this->httpGet('/'.self::API_VERSION.'/userinfo');
     }
 
-    public function getProfiles()
+    public function getProfiles(): string
     {
         /*
           returns $result - list of all the authenticated user's calendar profiles. Details are available in the Cronofy API Documentation
          */
-        return $this->httpGet("/" . self::API_VERSION . "/profiles");
+        return $this->httpGet('/'.self::API_VERSION.'/profiles');
     }
 
-    public function listCalendars()
+    public function listCalendars(): string
     {
         /*
           returns $result - Array of calendars. Details are available in the Cronofy API Documentation
          */
-        return $this->httpGet("/" . self::API_VERSION . "/calendars");
+        return $this->httpGet('/'.self::API_VERSION.'/calendars');
     }
 
-    public function listAccessibleCalendars($profileId)
+    public function listAccessibleCalendars(string $profileId): array
     {
-        return $this->httpGet("/" . self::API_VERSION . "/accessible_calendars", ['profile_id' => $profileId]);
+        return $this->httpGet('/'.self::API_VERSION.'/accessible_calendars', ['profile_id' => $profileId]);
     }
 
-    public function readEvents($params)
+    public function readEvents(array $params): object
     {
         /*
           Date from : The minimum date from which to return events. Defaults to 16 days in the past. OPTIONAL
@@ -388,12 +431,12 @@ class Cronofy
 
           returns $result - Array of events
          */
-        $url = $this->apiUrl("/" . self::API_VERSION . "/events");
+        $url = $this->apiUrl('/'.self::API_VERSION.'/events');
 
-        return new PagedResultIterator($this, "events", $this->getAuthHeaders(), $url, $this->urlParams($params));
+        return new PagedResultIterator($this, 'events', $this->getAuthHeaders(), $url, $this->urlParams($params));
     }
 
-    public function freeBusy($params)
+    public function freeBusy(array $params): PagedResultIterator
     {
         /*
           Date from : The minimum date from which to return free-busy information. Defaults to 16 days in the past. OPTIONAL
@@ -408,12 +451,12 @@ class Cronofy
 
           returns $result - Array of events
          */
-        $url = $this->apiUrl("/" . self::API_VERSION . "/free_busy");
+        $url = $this->apiUrl('/'.self::API_VERSION.'/free_busy');
 
-        return new PagedResultIterator($this, "free_busy", $this->getAuthHeaders(), $url, $this->urlParams($params));
+        return new PagedResultIterator($this, 'free_busy', $this->getAuthHeaders(), $url, $this->urlParams($params));
     }
 
-    public function upsertEvent($params)
+    public function upsertEvent(array $params): string
     {
         /*
           calendar_id : The calendar_id of the calendar you wish the event to be added to. REQUIRED
@@ -440,13 +483,13 @@ class Cronofy
             'event_id' => $params['event_id'],
             'summary' => $params['summary'],
             'start' => $params['start'],
-            'end' => $params['end']
+            'end' => $params['end'],
         ];
 
         return $this->baseUpsertEvent($postfields, $params);
     }
 
-    public function upsertExternalEvent($params)
+    public function upsertExternalEvent(array $params): string
     {
         /*
           calendar_id : The calendar_id of the calendar you wish the event to be added to. REQUIRED
@@ -473,13 +516,13 @@ class Cronofy
             'event_uid' => $params['event_uid'],
             'summary' => $params['summary'],
             'start' => $params['start'],
-            'end' => $params['end']
+            'end' => $params['end'],
         ];
 
         return $this->baseUpsertEvent($postFields, $params);
     }
 
-    private function baseUpsertEvent($postFields, $params)
+    private function baseUpsertEvent(array $postFields, array $params): string
     {
         if (!empty($params['description'])) {
             $postFields['description'] = $params['description'];
@@ -506,10 +549,10 @@ class Cronofy
             $postFields['attendees'] = $params['attendees'];
         }
 
-        return $this->httpPost("/" . self::API_VERSION . "/calendars/" . $params['calendar_id'] . "/events", $postFields);
+        return $this->httpPost('/'.self::API_VERSION.'/calendars/'.$params['calendar_id'].'/events', $postFields);
     }
 
-    public function deleteEvent($params)
+    public function deleteEvent(array $params): string
     {
         /*
           calendar_id : The calendar_id of the calendar you wish the event to be removed from. REQUIRED
@@ -519,10 +562,10 @@ class Cronofy
          */
         $postFields = ['event_id' => $params['event_id']];
 
-        return $this->httpDelete("/" . self::API_VERSION . "/calendars/" . $params['calendar_id'] . "/events", $postFields);
+        return $this->httpDelete('/'.self::API_VERSION.'/calendars/'.$params['calendar_id'].'/events', $postFields);
     }
 
-    public function deleteExternalEvent($params)
+    public function deleteExternalEvent(array $params): string
     {
         /*
           calendar_id : The calendar_id of the calendar you wish the event to be removed from. REQUIRED
@@ -532,10 +575,10 @@ class Cronofy
          */
         $postFields = ['event_uid' => $params['event_uid']];
 
-        return $this->httpDelete("/" . self::API_VERSION . "/calendars/" . $params['calendar_id'] . "/events", $postFields);
+        return $this->httpDelete('/'.self::API_VERSION.'/calendars/'.$params['calendar_id'].'/events', $postFields);
     }
 
-    public function createChannel($params)
+    public function createChannel(array $params): array
     {
         /*
           String callback_url : The URL that is notified whenever a change is made. REQUIRED
@@ -548,69 +591,69 @@ class Cronofy
             $postFields['filters'] = $params['filters'];
         }
 
-        return $this->httpPost("/" . self::API_VERSION . "/channels", $postFields);
+        return $this->httpPost('/'.self::API_VERSION.'/channels', $postFields);
     }
 
-    public function listChannels()
+    public function listChannels(): string
     {
         /*
           returns $result - Array of channels. Details are available in the Cronofy API Documentation
          */
-        return $this->httpGet("/" . self::API_VERSION . "/channels");
+        return $this->httpGet('/'.self::API_VERSION.'/channels');
     }
 
-    public function closeChannel($params)
+    public function closeChannel(array $params): string
     {
         /*
           channel_id : The ID of the channel to be closed. REQUIRED
 
           returns $result - Array of channels. Details are available in the Cronofy API Documentation
          */
-        return $this->httpDelete("/" . self::API_VERSION . "/channels/" . $params['channel_id']);
+        return $this->httpDelete('/'.self::API_VERSION.'/channels/'.$params['channel_id']);
     }
 
-    public function authorizeWithServiceAccount($params)
+    public function authorizeWithServiceAccount(array $params): array
     {
         /*
           email : The email of the user to be authorized. REQUIRED
           scope : The scopes to authorize for the user. REQUIRED
           callback_url : The URL to return to after authorization. REQUIRED
          */
-        if (isset($params["scope"]) && gettype($params["scope"]) == "array") {
-            $params["scope"] = join(" ", $params["scope"]);
+        if (isset($params['scope']) && 'array' == \gettype($params['scope'])) {
+            $params['scope'] = \join(' ', $params['scope']);
         }
 
-        return $this->httpPost("/" . self::API_VERSION . "/service_account_authorizations", $params);
+        return $this->httpPost('/'.self::API_VERSION.'/service_account_authorizations', $params);
     }
 
-    public function elevatedPermissions($params)
+    public function elevatedPermissions(array $params): array
     {
         /*
           permissions : The permissions to elevate to. Should be in an array of `array($calendar_id, $permission_level)`. REQUIRED
           redirect_uri : The application's redirect URI. REQUIRED
          */
-        return $this->httpPost("/" . self::API_VERSION . "/permissions", $params);
+        return $this->httpPost('/'.self::API_VERSION.'/permissions', $params);
     }
 
-    public function createCalendar($params)
+    public function createCalendar(array $params): array
     {
         /*
           profile_id : The ID for the profile on which to create the calendar. REQUIRED
           name : The name for the created calendar. REQUIRED
          */
-        return $this->httpPost("/" . self::API_VERSION . "/calendars", $params);
+        return $this->httpPost('/'.self::API_VERSION.'/calendars', $params);
     }
 
-    public function resources()
+    public function resources(): string
     {
         /*
           returns $result - Array of resources. Details
           are available in the Cronofy API Documentation
          */
-        return $this->httpGet('/' . self::API_VERSION . "/resources");
+        return $this->httpGet('/'.self::API_VERSION.'/resources');
     }
 
-    public function changeParticipationStatus($params)
+    public function changeParticipationStatus(array $params): array
     {
         /*
           calendar_id : The ID of the calendar holding the event. REQUIRED
@@ -618,13 +661,13 @@ class Cronofy
           status : The new participation status for the event. Accepted values are: accepted, tentative, declined. REQUIRED
          */
         $postFields = [
-            "status" => $params["status"]
+            'status' => $params['status'],
         ];
 
-        return $this->httpPost("/" . self::API_VERSION . "/calendars/" . $params["calendar_id"] . "/events/" . $params["event_uid"] . "/participation_status", $postFields);
+        return $this->httpPost('/'.self::API_VERSION.'/calendars/'.$params['calendar_id'].'/events/'.$params['event_uid'].'/participation_status', $postFields);
     }
 
-    public function availability($params)
+    public function availability(array $params): array
     {
         /*
           participants : An array of the groups of participants whose availability should be taken into account. REQUIRED
@@ -651,28 +694,28 @@ class Cronofy
                                       )
          */
         $postFields = [
-            "available_periods" => $params["available_periods"],
-            "participants" => $params["participants"],
-            "required_duration" => $params["required_duration"]
+            'available_periods' => $params['available_periods'],
+            'participants' => $params['participants'],
+            'required_duration' => $params['required_duration'],
         ];
 
-        if (!empty($params["buffer"])) {
-            $postFields["buffer"] = $params["buffer"];
+        if (!empty($params['buffer'])) {
+            $postFields['buffer'] = $params['buffer'];
         }
-        if (!empty($params["max_results"])) {
-            $postFields["max_results"] = $params["max_results"];
+        if (!empty($params['max_results'])) {
+            $postFields['max_results'] = $params['max_results'];
         }
-        if (!empty($params["start_interval"])) {
-            $postFields["start_interval"] = $params["start_interval"];
+        if (!empty($params['start_interval'])) {
+            $postFields['start_interval'] = $params['start_interval'];
         }
-        if (!empty($params["response_format"])) {
-            $postFields["response_format"] = $params["response_format"];
+        if (!empty($params['response_format'])) {
+            $postFields['response_format'] = $params['response_format'];
         }
 
-        return $this->apiKeyHttpPost("/" . self::API_VERSION . "/availability", $postFields);
+        return $this->apiKeyHttpPost('/'.self::API_VERSION.'/availability', $postFields);
     }
 
-    public function realTimeScheduling($params)
+    public function realTimeScheduling(array $params): string
     {
         /*
           oauth: An object of redirect_uri and scope following the event creation
@@ -720,19 +763,19 @@ class Cronofy
          */
 
         $postFields = [
-            "client_id" => $this->clientId,
-            "client_secret" => $this->clientSecret,
-            "oauth" => $params["oauth"],
-            "event" => $params["event"],
-            "availability" => $params["availability"],
-            "target_calendars" => $params["target_calendars"],
-            "tzid" => $params["tzid"],
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'oauth' => $params['oauth'],
+            'event' => $params['event'],
+            'availability' => $params['availability'],
+            'target_calendars' => $params['target_calendars'],
+            'tzid' => $params['tzid'],
         ];
 
-        return $this->httpPost("/" . self::API_VERSION . "/real_time_scheduling", $postFields);
+        return $this->httpPost('/'.self::API_VERSION.'/real_time_scheduling', $postFields);
     }
 
-    public function realTimeSequencing($params)
+    public function realTimeSequencing(array $params): string
     {
         /*
           oauth: An object of redirect_uri and scope following the event creation
@@ -787,20 +830,19 @@ class Cronofy
          */
 
         $postFields = [
-            "client_id" => $this->clientId,
-            "client_secret" => $this->clientSecret,
-            "oauth" => $params["oauth"],
-            "event" => $params["event"],
-            "availability" => $params["availability"],
-            "target_calendars" => $params["target_calendars"],
-            "tzid" => $params["tzid"],
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'oauth' => $params['oauth'],
+            'event' => $params['event'],
+            'availability' => $params['availability'],
+            'target_calendars' => $params['target_calendars'],
+            'tzid' => $params['tzid'],
         ];
 
-        return $this->httpPost("/" . self::API_VERSION . "/real_time_sequencing", $postFields);
+        return $this->httpPost('/'.self::API_VERSION.'/real_time_sequencing', $postFields);
     }
 
-
-    public function addToCalendar($params)
+    public function addToCalendar(array $params): array
     {
         /*
           oauth: An object of redirect_uri and scope following the event creation
@@ -818,16 +860,16 @@ class Cronofy
          */
 
         $postFields = [
-            "client_id" => $this->clientId,
-            "client_secret" => $this->clientSecret,
-            "oauth" => $params["oauth"],
-            "event" => $params["event"],
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'oauth' => $params['oauth'],
+            'event' => $params['event'],
         ];
 
-        return $this->httpPost("/" . self::API_VERSION . "/add_to_calendar", $postFields);
+        return $this->httpPost('/'.self::API_VERSION.'/add_to_calendar', $postFields);
     }
 
-    public function createSmartInvite($params)
+    public function createSmartInvite(array $params): string
     {
         /*
           Array event: An object with an event's details REQUIRED
@@ -849,9 +891,9 @@ class Cronofy
          */
 
         $postFields = [
-            "event" => $params["event"],
-            "smart_invite_id" => $params["smart_invite_id"],
-            "callback_url" => $params["callback_url"],
+            'event' => $params['event'],
+            'smart_invite_id' => $params['smart_invite_id'],
+            'callback_url' => $params['callback_url'],
         ];
 
         if (!empty($params['organizer'])) {
@@ -864,10 +906,10 @@ class Cronofy
             $postFields['recipient'] = $params['recipient'];
         }
 
-        return $this->apiKeyHttpPost("/" . self::API_VERSION . "/smart_invites", $postFields);
+        return $this->apiKeyHttpPost('/'.self::API_VERSION.'/smart_invites', $postFields);
     }
 
-    public function cancelSmartInvite($params)
+    public function cancelSmartInvite(array $params): string
     {
         /*
           Array recipient: An object with recipient details REQUIRED
@@ -878,15 +920,15 @@ class Cronofy
          */
 
         $postFields = [
-            "recipient" => $params["recipient"],
-            "smart_invite_id" => $params["smart_invite_id"],
-            "method" => "cancel",
+            'recipient' => $params['recipient'],
+            'smart_invite_id' => $params['smart_invite_id'],
+            'method' => 'cancel',
         ];
 
-        return $this->apiKeyHttpPost("/" . self::API_VERSION . "/smart_invites", $postFields);
+        return $this->apiKeyHttpPost('/'.self::API_VERSION.'/smart_invites', $postFields);
     }
 
-    public function getSmartInvite($smart_invite_id, $recipient_email)
+    public function getSmartInvite(string $smart_invite_id, string $recipient_email): string
     {
         /*
           String smart_invite_id: A string representing the id for the smart invite. REQUIRED
@@ -894,29 +936,28 @@ class Cronofy
          */
 
         $urlParams = [
-            "smart_invite_id" => $smart_invite_id,
-            "recipient_email" => $recipient_email,
+            'smart_invite_id' => $smart_invite_id,
+            'recipient_email' => $recipient_email,
         ];
 
-        return $this->apiKeyHttpGet("/" . self::API_VERSION . "/smart_invites", $urlParams);
+        return $this->apiKeyHttpGet('/'.self::API_VERSION.'/smart_invites', $urlParams);
     }
 
-    public function getAvailabilityRule($availability_rule_id)
+    public function getAvailabilityRule(string $availability_rule_id): array
     {
         /*
           String availability_rule_id: A string representing the id for the rule. REQUIRED
          */
 
-        return $this->httpGet("/" . self::API_VERSION . "/availability_rules/" . $availability_rule_id);
+        return $this->httpGet('/'.self::API_VERSION.'/availability_rules/'.$availability_rule_id);
     }
 
-    public function listAvailabilityRules()
+    public function listAvailabilityRules(): array
     {
-
-        return $this->httpGet("/" . self::API_VERSION . "/availability_rules");
+        return $this->httpGet('/'.self::API_VERSION.'/availability_rules');
     }
 
-    public function deleteAvailabilityRule($availability_rule_id)
+    public function deleteAvailabilityRule(string $availability_rule_id): string
     {
         /*
           String availability_rule_id: A string representing the id for the rule. REQUIRED
@@ -924,10 +965,10 @@ class Cronofy
           returns true on success, associative array of errors on failure
          */
 
-        return $this->httpDelete("/" . self::API_VERSION . "/availability_rules/" . $availability_rule_id);
+        return $this->httpDelete('/'.self::API_VERSION.'/availability_rules/'.$availability_rule_id);
     }
 
-    public function createAvailabilityRule($rule)
+    public function createAvailabilityRule(array $rule): array
     {
         /*
           Array rule: An object with an availability rule's details REQUIRED
@@ -953,46 +994,46 @@ class Cronofy
          */
 
         $postFields = [
-            "availability_rule_id" => $rule["availability_rule_id"],
-            "tzid" => $rule["tzid"],
-            "calendar_ids" => $rule["calendar_ids"],
-            "weekly_periods" => $rule["weekly_periods"],
+            'availability_rule_id' => $rule['availability_rule_id'],
+            'tzid' => $rule['tzid'],
+            'calendar_ids' => $rule['calendar_ids'],
+            'weekly_periods' => $rule['weekly_periods'],
         ];
 
-        return $this->httpPost("/" . self::API_VERSION . "/availability_rules", $postFields);
+        return $this->httpPost('/'.self::API_VERSION.'/availability_rules', $postFields);
     }
 
-    private function apiUrl($path)
+    private function apiUrl(string $path): string
     {
-        return $this->apiRootUrl . $path;
+        return $this->apiRootUrl.$path;
     }
 
-    private function urlParams($params)
+    private function urlParams(array $params): string
     {
-        if (count($params) == 0) {
-            return "";
+        if (0 == \count($params)) {
+            return '';
         }
         $str_params = [];
 
         foreach ($params as $key => $val) {
-            if (gettype($val) == "array") {
-                for ($i = 0; $i < count($val); $i++) {
-                    array_push($str_params, $key . "[]=" . urlencode($val[$i]));
+            if ('array' == \gettype($val)) {
+                foreach ($val as $i => $val) {
+                    $str_params[] = $key.'[]='.\urlencode($val[$i]);
                 }
             } else {
-                array_push($str_params, $key . "=" . urlencode($val));
+                $str_params[] = $key.'='.\urlencode($val);
             }
         }
 
-        return "?" . join("&", $str_params);
+        return '?'.\join('&', $str_params);
     }
 
-    private function getApiKeyAuthHeaders($with_content_headers = false)
+    private function getApiKeyAuthHeaders(bool $with_content_headers = false): array
     {
         $headers = [];
 
-        $headers[] = 'Authorization: Bearer ' . $this->clientSecret;
-        $headers[] = 'Host: ' . $this->hostDomain;
+        $headers[] = 'Authorization: Bearer '.$this->clientSecret;
+        $headers[] = 'Host: '.$this->hostDomain;
 
         if ($with_content_headers) {
             $headers[] = 'Content-Type: application/json; charset=utf-8';
@@ -1001,14 +1042,14 @@ class Cronofy
         return $headers;
     }
 
-    private function getAuthHeaders($with_content_headers = false)
+    private function getAuthHeaders(bool $with_content_headers = false): array
     {
         $headers = [];
 
         if (isset($this->accessToken)) {
-            $headers[] = 'Authorization: Bearer ' . $this->accessToken;
+            $headers[] = 'Authorization: Bearer '.$this->accessToken;
         }
-        $headers[] = 'Host: ' . $this->hostDomain;
+        $headers[] = 'Host: '.$this->hostDomain;
 
         if ($with_content_headers) {
             $headers[] = 'Content-Type: application/json; charset=utf-8';
@@ -1017,18 +1058,23 @@ class Cronofy
         return $headers;
     }
 
-    private function parsedResponse($response)
+    /**
+     * @param string $response
+     *
+     * @return mixed|string
+     */
+    private function parsedResponse(string $response)
     {
-        $json_decoded = json_decode($response, true);
+        $json_decoded = \json_decode($response, true);
 
-        if (json_last_error() != JSON_ERROR_NONE) {
+        if (JSON_ERROR_NONE != \json_last_error()) {
             return $response;
         }
 
         return $json_decoded;
     }
 
-    public function handleResponse($result, $status_code)
+    public function handleResponse(string $result, int $status_code)
     {
         if ($status_code >= 200 && $status_code < 300) {
             return $this->parsedResponse($result);
@@ -1092,6 +1138,6 @@ class Cronofy
         506 => 'Variant Also Negotiates',
         507 => 'Insufficient Storage',
         509 => 'Bandwidth Limit Exceeded',
-        510 => 'Not Extended'
+        510 => 'Not Extended',
     ];
 }

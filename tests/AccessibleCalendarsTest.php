@@ -1,15 +1,16 @@
 <?php
+
 namespace Cronofy\Tests;
 
+use Cronofy\Cronofy;
 use Cronofy\Http\HttpRequest;
 use PHPUnit\Framework\TestCase;
-use Cronofy\Cronofy;
 
 class AccessibleCalendarsTest extends TestCase
 {
-    public function testListAccessibleCalendars()
+    public function testListAccessibleCalendars(): void
     {
-        $application_calendar_id = "foo";
+        $application_calendar_id = 'foo';
 
         $accessible_calendars_response = '{
             "accessible_calendars": [
@@ -36,7 +37,7 @@ class AccessibleCalendarsTest extends TestCase
             ->method('httpGet')
             ->with(
                 'https://api.cronofy.com/v1/accessible_calendars?'
-                    . http_build_query(['profile_id' => $profileId = 'profile-id']),
+                    .\http_build_query(['profile_id' => $profileId = 'profile-id']),
                 [
                     'Authorization: Bearer accessToken',
                     'Host: api.cronofy.com',
@@ -45,17 +46,17 @@ class AccessibleCalendarsTest extends TestCase
             ->willReturn([$accessible_calendars_response, 200]);
 
         $cronofy = new Cronofy([
-            "client_id" => "clientId",
-            "client_secret" => "clientSecret",
-            "access_token" => "accessToken",
-            "refresh_token" => "refreshToken",
-            "http_client" => $http,
+            'client_id' => 'clientId',
+            'client_secret' => 'clientSecret',
+            'access_token' => 'accessToken',
+            'refresh_token' => 'refreshToken',
+            'http_client' => $http,
         ]);
 
         $accesibleCalendars = $cronofy->listAccessibleCalendars($profileId);
 
         $this->assertEquals(
-            json_decode($accessible_calendars_response, true),
+            \json_decode($accessible_calendars_response, true),
             $accesibleCalendars
         );
     }

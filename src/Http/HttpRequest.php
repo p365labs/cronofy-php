@@ -1,11 +1,16 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Cronofy\Http;
 
 interface HttpRequest
 {
-    public function httpGet($url, array $auth_headers);
-    public function getPage($url, array $auth_headers, $url_params = "");
-    public function httpPost($url, array $params, array $auth_headers);
-    public function httpDelete($url, array $params, array $auth_headers);
+    public function httpGet(string $url, array $auth_headers): array;
+
+    public function getPage(string $url, array $auth_headers, string $url_params = ''): array;
+
+    public function httpPost(string $url, array $params, array $auth_headers): array;
+
+    public function httpDelete(string $url, array $params, array $auth_headers): array;
 }

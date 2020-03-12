@@ -1,20 +1,21 @@
 <?php
+
 namespace Cronofy\Tests;
 
+use Cronofy\Cronofy;
 use Cronofy\Http\HttpRequest;
 use PHPUnit\Framework\TestCase;
-use Cronofy\Cronofy;
 
 class ApplicationCalendarTest extends TestCase
 {
-    public function testCreateApplicationCalendar()
+    public function testCreateApplicationCalendar(): void
     {
-        $application_calendar_id = "foo";
+        $application_calendar_id = 'foo';
 
         $request_params = [
-            "client_id" => "clientId",
-            "client_secret" => "clientSecret",
-            "application_calendar_id" => $application_calendar_id,
+            'client_id' => 'clientId',
+            'client_secret' => 'clientSecret',
+            'application_calendar_id' => $application_calendar_id,
         ];
 
         $application_calendar_response = '{
@@ -40,23 +41,22 @@ class ApplicationCalendarTest extends TestCase
                 $this->equalTo($request_params),
                 $this->equalTo([
                     'Host: api.cronofy.com',
-                    'Content-Type: application/json; charset=utf-8'
+                    'Content-Type: application/json; charset=utf-8',
                 ])
             )
             ->will($this->returnValue([$application_calendar_response, 200]));
 
         $cronofy = new Cronofy([
-            "client_id" => "clientId",
-            "client_secret" => "clientSecret",
-            "http_client" => $http,
+            'client_id' => 'clientId',
+            'client_secret' => 'clientSecret',
+            'http_client' => $http,
         ]);
-
 
         $actual = $cronofy->applicationCalendar($application_calendar_id);
 
-        $this->assertEquals($actual['sub'], "apc_567236000909002");
-        $this->assertEquals($cronofy->accessToken, "fffff");
-        $this->assertEquals($cronofy->refreshToken, "2222");
+        $this->assertEquals($actual['sub'], 'apc_567236000909002');
+        $this->assertEquals($cronofy->accessToken, 'fffff');
+        $this->assertEquals($cronofy->refreshToken, '2222');
         $this->assertEquals($cronofy->expiresIn, 3600);
     }
 }

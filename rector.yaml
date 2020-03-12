@@ -1,0 +1,20 @@
+parameters:
+    sets:
+        - 'code-quality'
+        - 'php72'
+        - 'php73'
+        - 'php74'
+
+    paths:
+        - src
+
+    exclude_paths:
+        - 'tests/*'
+
+    exclude_rectors:
+        - 'Rector\DeadCode\Rector\ClassMethod\RemoveUnusedParameterRector' # Causes BC breaks and broken services. Use only manually with caution.
+        - 'Rector\DeadCode\Rector\MethodCall\RemoveDefaultArgumentValueRector' # Doesn't play nicely every time.
+        - 'Rector\DeadCode\Rector\If_\SimplifyIfElseWithSameContentRector' # Removes code that is not the same.
+        - 'Rector\DeadCode\Rector\For_\RemoveDeadIfForeachForRector' # Problematic with some copy-pasted code.
+        - 'Rector\DeadCode\Rector\Ternary\TernaryToBooleanOrFalseToBooleanAndRector' # see https://github.com/rectorphp/rector/issues/2765
+        - 'Rector\DeadCode\Rector\Switch_\RemoveDuplicatedCaseInSwitchRector' # see https://github.com/rectorphp/rector/issues/2730

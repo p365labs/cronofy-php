@@ -1,13 +1,14 @@
 <?php
+
 namespace Cronofy\Tests;
 
+use Cronofy\Cronofy;
 use Cronofy\Http\HttpRequest;
 use PHPUnit\Framework\TestCase;
-use Cronofy\Cronofy;
 
 class ReadEventsTest extends TestCase
 {
-    public function testReadEventsSinglePageSingleEvent()
+    public function testReadEventsSinglePageSingleEvent(): void
     {
         $events_page = '{
           "pages": {
@@ -30,22 +31,22 @@ class ReadEventsTest extends TestCase
                 $this->equalTo('https://api.cronofy.com/v1/events'),
                 $this->equalTo([
                     'Authorization: Bearer accessToken',
-                    'Host: api.cronofy.com'
+                    'Host: api.cronofy.com',
                 ]),
-                "?tzid=Etc%2FUTC"
+                '?tzid=Etc%2FUTC'
             )
             ->will($this->returnValue([$events_page, 200]));
 
         $cronofy = new Cronofy([
-            "client_id" => "clientId",
-            "client_secret" => "clientSecret",
-            "access_token" => "accessToken",
-            "refresh_token" => "refreshToken",
-            "http_client" => $http,
+            'client_id' => 'clientId',
+            'client_secret' => 'clientSecret',
+            'access_token' => 'accessToken',
+            'refresh_token' => 'refreshToken',
+            'http_client' => $http,
         ]);
 
         $params = [
-            'tzid' => 'Etc/UTC'
+            'tzid' => 'Etc/UTC',
         ];
 
         $actual = $cronofy->readEvents($params);
@@ -55,16 +56,16 @@ class ReadEventsTest extends TestCase
 
         foreach ($actual->each() as $event) {
             $this->assertNotNull($event);
-            $this->assertEquals($event["event_uid"], "evt_external_54008b1a4a41730f8d5c6037");
+            $this->assertEquals($event['event_uid'], 'evt_external_54008b1a4a41730f8d5c6037');
         }
 
         foreach ($actual as $event) {
             $this->assertNotNull($event);
-            $this->assertEquals($event["event_uid"], "evt_external_54008b1a4a41730f8d5c6037");
+            $this->assertEquals($event['event_uid'], 'evt_external_54008b1a4a41730f8d5c6037');
         }
     }
 
-    public function testReadEventsTwoPageSingleEvent()
+    public function testReadEventsTwoPageSingleEvent(): void
     {
         $page_1 = '{
           "pages": {
@@ -101,15 +102,15 @@ class ReadEventsTest extends TestCase
             ->will($this->onConsecutiveCalls([$page_1, 200], [$page_2, 200]));
 
         $cronofy = new Cronofy([
-            "client_id" => "clientId",
-            "client_secret" => "clientSecret",
-            "access_token" => "accessToken",
-            "refresh_token" => "refreshToken",
-            "http_client" => $http,
+            'client_id' => 'clientId',
+            'client_secret' => 'clientSecret',
+            'access_token' => 'accessToken',
+            'refresh_token' => 'refreshToken',
+            'http_client' => $http,
         ]);
 
         $params = [
-            'tzid' => 'Etc/UTC'
+            'tzid' => 'Etc/UTC',
         ];
 
         $actual = $cronofy->readEvents($params);
@@ -117,7 +118,7 @@ class ReadEventsTest extends TestCase
         $this->assertCount(2, $actual);
     }
 
-    public function testReadEventsCanBeConvertedToArray()
+    public function testReadEventsCanBeConvertedToArray(): void
     {
         $page_1 = '{
           "pages": {
@@ -154,21 +155,21 @@ class ReadEventsTest extends TestCase
             ->will($this->onConsecutiveCalls([$page_1, 200], [$page_2, 200]));
 
         $cronofy = new Cronofy([
-            "client_id" => "clientId",
-            "client_secret" => "clientSecret",
-            "access_token" => "accessToken",
-            "refresh_token" => "refreshToken",
-            "http_client" => $http,
+            'client_id' => 'clientId',
+            'client_secret' => 'clientSecret',
+            'access_token' => 'accessToken',
+            'refresh_token' => 'refreshToken',
+            'http_client' => $http,
         ]);
 
         $params = [
-            'tzid' => 'Etc/UTC'
+            'tzid' => 'Etc/UTC',
         ];
 
         $actual = $cronofy->readEvents($params);
-        $event_uids = array_map(function (array $event) {
+        $event_uids = \array_map(function (array $event) {
             return $event['event_uid'];
-        }, iterator_to_array($actual));
+        }, \iterator_to_array($actual));
 
         $this->assertContains('evt_external_event_one', $event_uids);
         $this->assertContains('evt_external_event_two', $event_uids);
