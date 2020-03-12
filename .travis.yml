@@ -26,4 +26,4 @@ jobs:
       script: composer rector -- --dry-run --no-progress-bar
     -
       name: CS Fixer
-      script: vendor/bin/php-cs-fixer fix --config=.php_cs.dist -v --dry-run --using-cache=no --show-progress=dots --diff $(git diff -- '*.php' --name-only --diff-filter=ACMRTUXB "${TRAVIS_COMMIT_RANGE}")
+      script: vendor/bin/php-cs-fixer fix --config=.php_cs.dist -v --dry-run --using-cache=no --allow-risky=yes --show-progress=dots --diff $(git diff -- '*.php' --name-only --diff-filter=ACMRTUXB "${TRAVIS_COMMIT_RANGE}")
