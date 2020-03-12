@@ -1,4 +1,6 @@
-language: php
+"os": "linux",
+"dist": "xenial"
+language: "php"
 php:
   - '7.2'
 
@@ -12,7 +14,7 @@ install:
 script:
   - composer test
 
-#jobs:
+jobs:
   include:
     - stage: test
       name: PHPSTAN
