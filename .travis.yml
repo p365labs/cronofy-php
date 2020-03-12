@@ -3,6 +3,8 @@ dist: 'xenial'
 language: 'php'
 php:
   - '7.2'
+  - '7.3'
+  - '7.4'
 
 before_install:
   # turn off XDebug
@@ -19,9 +21,9 @@ jobs:
     - stage: test
       name: PHPSTAN
       script: composer phpstan
-#    -
-#      name: Rector
-#      script: composer rector -- --dry-run --no-progress-bar
-#    -
-#      name: CS Fixer
-#      script: vendor/bin/php-cs-fixer fix --config=.php_cs -v --dry-run --using-cache=no --show-progress=dots --diff $(git diff -- '*.php' --name-only --diff-filter=ACMRTUXB "${TRAVIS_COMMIT_RANGE}")
+    -
+      name: Rector
+      script: composer rector -- --dry-run --no-progress-bar
+    -
+      name: CS Fixer
+      script: vendor/bin/php-cs-fixer fix --config=.php_cs -v --dry-run --using-cache=no --show-progress=dots --diff $(git diff -- '*.php' --name-only --diff-filter=ACMRTUXB "${TRAVIS_COMMIT_RANGE}")
